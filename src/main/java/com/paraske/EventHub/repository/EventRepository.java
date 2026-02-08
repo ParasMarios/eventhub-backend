@@ -1,6 +1,6 @@
-package repository;
+package com.paraske.EventHub.repository;
 
-import model.Event;
+import com.paraske.EventHub.model.Event;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

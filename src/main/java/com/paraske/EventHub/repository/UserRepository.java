@@ -1,6 +1,6 @@
-package repository;
+package com.paraske.EventHub.repository;
 
-import model.User;
+import com.paraske.EventHub.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

@@ -1,4 +1,4 @@
-package model;
+package com.paraske.EventHub.model;
 
 import jakarta.persistence.*;
 

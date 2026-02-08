@@ -1,9 +1,9 @@
-package controller;
+package com.paraske.EventHub.controller;
 
-import model.Event;
+import com.paraske.EventHub.model.Event;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import service.EventService;
+import com.paraske.EventHub.service.EventService;
 
 import java.util.List;
 

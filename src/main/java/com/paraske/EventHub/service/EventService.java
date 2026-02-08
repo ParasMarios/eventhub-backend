@@ -1,12 +1,12 @@
-package service;
+package com.paraske.EventHub.service;
 
-import model.Event;
-import model.User;
+import com.paraske.EventHub.model.Event;
+import com.paraske.EventHub.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import repository.EventRepository;
-import repository.UserRepository;
+import com.paraske.EventHub.repository.EventRepository;
+import com.paraske.EventHub.repository.UserRepository;
 
 import java.util.List;
 
