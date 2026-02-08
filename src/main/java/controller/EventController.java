@@ -3,7 +3,7 @@ package controller;
 import model.Event;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import repository.EventRepository;
+import service.EventService;
 
 import java.util.List;
 
@@ -13,23 +13,25 @@ import java.util.List;
 public class EventController {
 
     @Autowired
-    private EventRepository eventRepository;
+    private EventService eventService;
 
-    // 1. Προβολή όλων των events
     @GetMapping
     public List<Event> getAllEvents() {
-        return eventRepository.findAll();
+        return eventService.getAllEvents();
     }
 
-    // 2. Δημιουργία νέου event
     @PostMapping
     public Event createEvent(@RequestBody Event event) {
-        return eventRepository.save(event);
+        return eventService.createEvent(event);
     }
 
-    // 3. Αναζήτηση ανά τοποθεσία
-    @GetMapping("/search")
-    public List<Event> searchEvents(@RequestParam String location) {
-        return eventRepository.findByLocationContainingIgnoreCase(location);
+    @PostMapping("/{eventId}/join/{userId}")
+    public String joinEvent(@PathVariable Long eventId, @PathVariable Long userId) {
+        try {
+            eventService.joinEvent(eventId, userId);
+            return "Successfully joined event!";
+        } catch (Exception e) {
+            return "Error joining event: " + e.getMessage();
+        }
     }
 }
