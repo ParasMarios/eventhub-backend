@@ -20,9 +20,9 @@ public class MediaController {
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
             String filePath = mediaService.saveFile(file);
-            return ResponseEntity.ok("Το αρχείο ανέβηκε επιτυχώς: " + filePath);
+            return ResponseEntity.ok("Successfully uploaded file: " + filePath);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Αποτυχία ανεβάσματος: " + e.getMessage());
+            return ResponseEntity.status(500).body("Error uploading file: " + e.getMessage());
         }
     }
 }
