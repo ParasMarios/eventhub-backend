@@ -1,5 +1,6 @@
 package com.paraske.EventHub.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.List;
@@ -22,6 +23,7 @@ public class User {
 
     // Τα events που οργάνωσε ο χρήστης
     @OneToMany(mappedBy = "organizer")
+    @JsonIgnore
     private List<Event> organizedEvents;
 
     public Long getId() {
