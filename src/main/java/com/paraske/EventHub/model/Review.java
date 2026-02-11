@@ -10,6 +10,9 @@ public class Review {
     private Long id;
 
     private int overallRating; // Συνολική βαθμολογία (1-5)
+    private Integer organizationRating; // Βαθμολογία οργάνωσης (1-5)
+    private Integer contentRating;    // Βαθμολογία περιεχομένου (1-5)
+    private Integer venueRating;      // Βαθμολογία χώρου (1-5)
 
     @Column(columnDefinition = "TEXT")
     private String comment;
@@ -36,6 +39,30 @@ public class Review {
 
     public void setOverallRating(int overallRating) {
         this.overallRating = overallRating;
+    }
+
+    public Integer getOrganizationRating() {
+        return organizationRating;
+    }
+
+    public void setOrganizationRating(Integer organizationRating) {
+        this.organizationRating = organizationRating;
+    }
+
+    public Integer getContentRating() {
+        return contentRating;
+    }
+
+    public void setContentRating(Integer contentRating) {
+        this.contentRating = contentRating;
+    }
+
+    public Integer getVenueRating() {
+        return venueRating;
+    }
+
+    public void setVenueRating(Integer venueRating) {
+        this.venueRating = venueRating;
     }
 
     public String getComment() {

@@ -1,10 +1,14 @@
 package com.paraske.EventHub.controller;
 
+import com.paraske.EventHub.dto.EventRatingStats;
 import com.paraske.EventHub.model.Event;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
 import com.paraske.EventHub.service.EventService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -33,5 +37,20 @@ public class EventController {
         } catch (Exception e) {
             return "Error joining event: " + e.getMessage();
         }
+    }
+
+    @GetMapping("/{eventId}/stats")
+    public ResponseEntity<EventRatingStats> getEventStats(@PathVariable Long eventId) {
+        return ResponseEntity.ok(eventService.getEventStats(eventId));
+    }
+
+    @GetMapping("/filter")
+    public List<Event> getFilteredEvents(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
+
+        return eventService.filterEvents(title, location, start, end);
     }
 }

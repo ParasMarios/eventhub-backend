@@ -27,7 +27,6 @@ public class MediaService {
             Files.createDirectories(uploadPath);
         }
 
-        // Δημιουργία μοναδικού ονόματος για να μην έχουμε επικαλύψεις
         String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
         Path filePath = uploadPath.resolve(fileName);
 
