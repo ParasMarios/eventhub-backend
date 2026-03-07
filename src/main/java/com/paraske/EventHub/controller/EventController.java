@@ -44,6 +44,13 @@ public class EventController {
         return ResponseEntity.ok(eventService.getEventStats(eventId));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Event> getEventById(@PathVariable Long id) {
+        return eventService.getEventById(id) // Βεβαιώσου ότι έχεις αυτή τη μέθοδο στο Service
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @GetMapping("/filter")
     public List<Event> getFilteredEvents(
             @RequestParam(required = false) String title,

@@ -13,6 +13,7 @@ import com.paraske.EventHub.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class EventService {
@@ -87,5 +88,9 @@ public class EventService {
                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
         return event.getOrganizer().getId().equals(userId);
+    }
+
+    public Optional<Event> getEventById(Long id) {
+        return eventRepository.findById(id);
     }
 }
