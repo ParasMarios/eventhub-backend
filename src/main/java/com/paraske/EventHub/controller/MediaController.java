@@ -28,7 +28,8 @@ public class MediaController {
         }
 
         try {
-            return ResponseEntity.ok("Media uploaded successfully!");
+            String filePath = mediaService.saveFile(file);
+            return ResponseEntity.ok("Media uploaded successfully! Path: " + filePath);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error uploading media: " + e.getMessage());
         }
