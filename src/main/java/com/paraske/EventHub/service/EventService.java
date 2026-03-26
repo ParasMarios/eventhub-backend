@@ -32,6 +32,13 @@ public class EventService {
     }
 
     public Event createEvent(Event event) {
+        Long organizerId = event.getOrganizer().getId();
+
+        User organizer = userRepository.findById(organizerId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + organizerId));
+
+        event.setOrganizer(organizer);
+
         return eventRepository.save(event);
     }
 
