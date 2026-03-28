@@ -6,6 +6,7 @@ import com.paraske.EventHub.model.Review;
 import com.paraske.EventHub.model.User;
 import com.paraske.EventHub.repository.ReviewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.paraske.EventHub.repository.EventRepository;
@@ -100,4 +101,21 @@ public class EventService {
     public Optional<Event> getEventById(Long id) {
         return eventRepository.findById(id);
     }
+
+    public List<Event> getEventsByOrganizer(Long userId) {
+        return eventRepository.findByOrganizerId(userId);
+        }
+
+    public void secureDeleteEvent(Long eventId, String currentUsername) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        //Συγκρίνουμε το username του organizer με το συνδεδεμένο username
+        if (!event.getOrganizer().getUsername().equals(currentUsername)) {
+            throw new AccessDeniedException("You are not the organizer of this event! You cannot delete it.");
+        }
+
+        eventRepository.deleteById(eventId);
+    }
+
 }

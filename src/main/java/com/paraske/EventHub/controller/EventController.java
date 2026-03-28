@@ -8,7 +8,11 @@ import com.paraske.EventHub.service.EventService;
 import com.paraske.EventHub.service.MediaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -74,6 +78,11 @@ public class EventController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Event>> getEventsByUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(eventService.getEventsByOrganizer(userId));
+    }
+
     @GetMapping("/filter")
     public List<Event> getFilteredEvents(
             @RequestParam(required = false) String title,
@@ -82,5 +91,22 @@ public class EventController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
 
         return eventService.filterEvents(title, location, start, end);
+    }
+
+    @DeleteMapping("/{eventId}")
+    public ResponseEntity<?> deleteEvent(@PathVariable Long eventId) {
+        // 1. Παίρνουμε τον συνδεδεμένο χρήστη (από το context που έστησε το JwtFilter)
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName(); // Επιστρέφει το 'subject' (username) του token
+
+        // 2. Καλούμε το Service για να κάνει τη διαγραφή (και τον έλεγχο ασφαλείας)
+        try {
+            eventService.secureDeleteEvent(eventId, currentUsername);
+            return ResponseEntity.ok("Event deleted successfully");
+        } catch (AccessDeniedException ade) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Error: " + ade.getMessage());
+        } catch (RuntimeException re) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Error: " + re.getMessage());
+        }
     }
 }
