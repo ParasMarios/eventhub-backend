@@ -43,6 +43,23 @@ public class EventService {
         return eventRepository.save(event);
     }
 
+    public Event updateEvent(Long id, Event details, String username) {
+        Event event = eventRepository.findById(id).orElseThrow();
+
+        // Έλεγχος αν είναι ο ιδιοκτήτης
+        if (!event.getOrganizer().getUsername().equals(username)) {
+            throw new AccessDeniedException("Not authorized");
+        }
+
+        event.setTitle(details.getTitle());
+        event.setDescription(details.getDescription());
+        event.setLocation(details.getLocation());
+        event.setDateTime(details.getDateTime());
+
+        return eventRepository.save(event);
+    }
+
+
     @Transactional
     public void joinEvent(Long eventId, Long userId) {
         Event event = eventRepository.findById(eventId)
@@ -58,24 +75,12 @@ public class EventService {
         List<Review> reviews = reviewRepository.findByEventId(eventId);
 
         if (reviews.isEmpty()) {
-            return new EventRatingStats(0.0, 0.0, 0.0, 0.0, 0L);
+            return new EventRatingStats(0.0,  0L);
         }
 
         double overall = reviews.stream().mapToInt(Review::getOverallRating).average().orElse(0.0);
 
-        double org = reviews.stream()
-                .filter(r -> r.getOrganizationRating() != null)
-                .mapToInt(Review::getOrganizationRating).average().orElse(0.0);
-
-        double content = reviews.stream()
-                .filter(r -> r.getContentRating() != null)
-                .mapToInt(Review::getContentRating).average().orElse(0.0);
-
-        double venue = reviews.stream()
-                .filter(r -> r.getVenueRating() != null)
-                .mapToInt(Review::getVenueRating).average().orElse(0.0);
-
-        return new EventRatingStats(overall, org, content, venue, (long) reviews.size());
+        return new EventRatingStats(overall, (long) reviews.size());
     }
 
     public List<Event> filterEvents(String title, String location, LocalDateTime start, LocalDateTime end) {
