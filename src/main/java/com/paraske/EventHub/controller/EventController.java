@@ -76,8 +76,6 @@ public class EventController {
 
     @GetMapping("/joined/{userId}")
     public ResponseEntity<Set<Event>> getJoinedEvents(@PathVariable Long userId) {
-        // Υποθέτοντας ότι έχεις μια μέθοδο στο Service που φέρνει
-        // τα events από το user.getJoinedEvents()
         return ResponseEntity.ok(eventService.getJoinedEventsByUser(userId));
     }
 
