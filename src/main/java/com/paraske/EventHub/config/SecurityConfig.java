@@ -33,6 +33,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reviews/event/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/events/joined/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/events/*/join").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/events/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/reviews/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/events/**").authenticated()

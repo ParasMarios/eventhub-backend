@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/events")
@@ -66,14 +67,18 @@ public class EventController {
         return ResponseEntity.ok(eventService.updateEvent(id, eventDetails, currentUsername));
     }
 
-    @PostMapping("/{eventId}/join/{userId}")
-    public String joinEvent(@PathVariable Long eventId, @PathVariable Long userId) {
-        try {
-            eventService.joinEvent(eventId, userId);
-            return "Successfully joined event!";
-        } catch (Exception e) {
-            return "Error joining event: " + e.getMessage();
-        }
+    @PostMapping("/{eventId}/join")
+    public ResponseEntity<?> joinEvent(@PathVariable Long eventId, Authentication authentication) {
+        String username = authentication.getName();
+        eventService.joinEvent(eventId, username);
+        return ResponseEntity.ok("Joined successfully");
+    }
+
+    @GetMapping("/joined/{userId}")
+    public ResponseEntity<Set<Event>> getJoinedEvents(@PathVariable Long userId) {
+        // Υποθέτοντας ότι έχεις μια μέθοδο στο Service που φέρνει
+        // τα events από το user.getJoinedEvents()
+        return ResponseEntity.ok(eventService.getJoinedEventsByUser(userId));
     }
 
     @GetMapping("/{eventId}/stats")

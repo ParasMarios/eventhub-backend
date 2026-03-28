@@ -3,7 +3,9 @@ package com.paraske.EventHub.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -25,6 +27,18 @@ public class User {
     @OneToMany(mappedBy = "organizer")
     @JsonIgnore
     private List<Event> organizedEvents;
+
+    @ManyToMany(mappedBy = "participants")
+    @JsonIgnore
+    private Set<Event> joinedEvents = new HashSet<>();
+
+    public Set<Event> getJoinedEvents() {
+        return joinedEvents;
+    }
+
+    public void setJoinedEvents(Set<Event> joinedEvents) {
+        this.joinedEvents = joinedEvents;
+    }
 
     public Long getId() {
         return id;

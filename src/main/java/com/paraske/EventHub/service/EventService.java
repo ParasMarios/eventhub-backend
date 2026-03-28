@@ -15,6 +15,7 @@ import com.paraske.EventHub.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class EventService {
@@ -59,16 +60,18 @@ public class EventService {
         return eventRepository.save(event);
     }
 
-
     @Transactional
-    public void joinEvent(Long eventId, Long userId) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        event.getParticipants().add(user);
+    public void joinEvent(Long eventId, String username) {
+        Event event = eventRepository.findById(eventId).orElseThrow();
+        User user = userRepository.findByUsername(username).orElseThrow();
 
+        event.getParticipants().add(user);
         eventRepository.save(event);
+    }
+
+    public Set<Event> getJoinedEventsByUser(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow();
+        return user.getJoinedEvents();
     }
 
     public EventRatingStats getEventStats(Long eventId) {
