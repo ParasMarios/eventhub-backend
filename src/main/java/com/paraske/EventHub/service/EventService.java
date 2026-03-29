@@ -1,5 +1,7 @@
 package com.paraske.EventHub.service;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.paraske.EventHub.dto.EventRatingStats;
 import com.paraske.EventHub.model.Event;
 import com.paraske.EventHub.model.EventImage;
@@ -37,6 +39,9 @@ public class EventService {
 
     @Autowired
     private EventImageRepository eventImageRepository;
+
+    @Autowired
+    private Cloudinary cloudinary;
 
 
     public List<Event> getAllEvents() {
@@ -137,38 +142,27 @@ public class EventService {
     }
 
     public List<EventImage> uploadGalleryImages(Long eventId, MultipartFile[] files, User currentUser) {
-        // 1. Βρίσκουμε το Event
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new RuntimeException("Το Event δεν βρέθηκε!"));
+                .orElseThrow(() -> new RuntimeException("Το Event δεν βρέθηκε."));
 
-        List<EventImage> savedImages = new ArrayList<>();
+        List<EventImage> uploadedImages = new ArrayList<>();
 
-        String uploadDir = "uploads/";
+        for (MultipartFile file : files) {
+            try {
+                // 1. Ανέβασμα της εικόνας στο Cloudinary
+                Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
 
-        try {
-            // Σιγουρευόμαστε ότι ο φάκελος υπάρχει
-            Files.createDirectories(Paths.get(uploadDir));
+                String imageUrl = uploadResult.get("secure_url").toString();
 
-            // 2. Επεξεργαζόμαστε κάθε αρχείο ξεχωριστά
-            for (MultipartFile file : files) {
-                if (!file.isEmpty()) {
-                    // Φτιάχνουμε ένα μοναδικό όνομα για να μην "πατήσει" η μία φωτό την άλλη
-                    String filename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-                    Path filePath = Paths.get(uploadDir, filename);
+                EventImage image = new EventImage(imageUrl, event, currentUser);
+                uploadedImages.add(eventImageRepository.save(image));
 
-                    // Αποθήκευση στον δίσκο
-                    Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-                    // 3. Δημιουργία και αποθήκευση της οντότητας στη Βάση
-                    EventImage image = new EventImage(filename, event, currentUser);
-                    savedImages.add(eventImageRepository.save(image));
-                }
+            } catch (IOException e) {
+                System.err.println("Αποτυχία ανεβάσματος στο Cloudinary: " + e.getMessage());
+                throw new RuntimeException("Αποτυχία αποθήκευσης της εικόνας.");
             }
-        } catch (IOException e) {
-            throw new RuntimeException("Αποτυχία αποθήκευσης των αρχείων", e);
         }
-
-        return savedImages;
+        return uploadedImages;
     }
 
     @Transactional
@@ -181,16 +175,6 @@ public class EventService {
 
         if (!isUploader && !isOrganizer) {
             throw new RuntimeException("Δεν έχετε δικαίωμα να διαγράψετε αυτή τη φωτογραφία.");
-        }
-
-        String uploadDir = "uploads/";
-        Path filePath = Paths.get(uploadDir, image.getImageUrl());
-
-        try {
-            Files.deleteIfExists(filePath);
-            System.out.println("Το αρχείο διαγράφηκε από τον δίσκο: " + filePath);
-        } catch (IOException e) {
-            System.err.println("Αποτυχία διαγραφής αρχείου: " + e.getMessage());
         }
 
         eventImageRepository.delete(image);
