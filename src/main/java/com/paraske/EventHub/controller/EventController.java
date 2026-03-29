@@ -5,7 +5,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.paraske.EventHub.dto.EventRatingStats;
 import com.paraske.EventHub.model.Event;
 import com.paraske.EventHub.model.EventImage;
+import com.paraske.EventHub.model.User;
 import com.paraske.EventHub.repository.EventRepository;
+import com.paraske.EventHub.repository.UserRepository;
 import com.paraske.EventHub.service.EventService;
 import com.paraske.EventHub.service.MediaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -38,6 +41,10 @@ public class EventController {
 
     @Autowired
     private EventRepository eventRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
 
     @GetMapping
     public ResponseEntity<List<Event>> getAllEvents(
@@ -158,5 +165,19 @@ public class EventController {
         List<EventImage> uploadedImages = eventService.uploadGalleryImages(id, files);
 
         return ResponseEntity.ok(uploadedImages);
+    }
+
+    @PostMapping("/{id}/leave")
+    public ResponseEntity<?> leaveEvent(@PathVariable Long id, Principal principal) {
+        // Υποθέτοντας ότι βρίσκεις τον χρήστη όπως και στο join
+        User currentUser = userRepository.findByUsername(principal.getName()).orElseThrow();
+        Event event = eventRepository.findById(id).orElseThrow();
+
+        if (event.getParticipants().contains(currentUser)) {
+            event.getParticipants().remove(currentUser);
+            eventRepository.save(event);
+            return ResponseEntity.ok("Επιτυχής ακύρωση συμμετοχής");
+        }
+        return ResponseEntity.badRequest().body("Δεν συμμετέχετε σε αυτό το event.");
     }
 }
