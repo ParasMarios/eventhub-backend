@@ -2,8 +2,10 @@ package com.paraske.EventHub.service;
 
 import com.paraske.EventHub.dto.EventRatingStats;
 import com.paraske.EventHub.model.Event;
+import com.paraske.EventHub.model.EventImage;
 import com.paraske.EventHub.model.Review;
 import com.paraske.EventHub.model.User;
+import com.paraske.EventHub.repository.EventImageRepository;
 import com.paraske.EventHub.repository.ReviewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -11,11 +13,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.paraske.EventHub.repository.EventRepository;
 import com.paraske.EventHub.repository.UserRepository;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class EventService {
@@ -28,6 +34,10 @@ public class EventService {
 
     @Autowired
     private ReviewRepository reviewRepository;
+
+    @Autowired
+    private EventImageRepository eventImageRepository;
+
 
     public List<Event> getAllEvents() {
         return eventRepository.findAll();
@@ -124,6 +134,41 @@ public class EventService {
         }
 
         eventRepository.deleteById(eventId);
+    }
+
+    public List<EventImage> uploadGalleryImages(Long eventId, MultipartFile[] files) {
+        // 1. Βρίσκουμε το Event
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Το Event δεν βρέθηκε!"));
+
+        List<EventImage> savedImages = new ArrayList<>();
+
+        String uploadDir = "uploads/";
+
+        try {
+            // Σιγουρευόμαστε ότι ο φάκελος υπάρχει
+            Files.createDirectories(Paths.get(uploadDir));
+
+            // 2. Επεξεργαζόμαστε κάθε αρχείο ξεχωριστά
+            for (MultipartFile file : files) {
+                if (!file.isEmpty()) {
+                    // Φτιάχνουμε ένα μοναδικό όνομα για να μην "πατήσει" η μία φωτό την άλλη
+                    String filename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+                    Path filePath = Paths.get(uploadDir, filename);
+
+                    // Αποθήκευση στον δίσκο
+                    Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+                    // 3. Δημιουργία και αποθήκευση της οντότητας στη Βάση
+                    EventImage image = new EventImage(filename, event);
+                    savedImages.add(eventImageRepository.save(image));
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Αποτυχία αποθήκευσης των αρχείων", e);
+        }
+
+        return savedImages;
     }
 
 }

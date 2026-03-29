@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -40,6 +42,17 @@ public class Event {
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private Set<User> participants;
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EventImage> gallery = new ArrayList<>();
+
+    public List<EventImage> getGallery() {
+        return gallery;
+    }
+
+    public void setGallery(List<EventImage> gallery) {
+        this.gallery = gallery;
+    }
 
     public Long getId() {
         return id;

@@ -4,12 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.paraske.EventHub.dto.EventRatingStats;
 import com.paraske.EventHub.model.Event;
+import com.paraske.EventHub.model.EventImage;
 import com.paraske.EventHub.repository.EventRepository;
 import com.paraske.EventHub.service.EventService;
 import com.paraske.EventHub.service.MediaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -146,5 +148,15 @@ public class EventController {
         } catch (RuntimeException re) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Error: " + re.getMessage());
         }
+    }
+
+    @PostMapping(value = "/{id}/gallery", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<List<EventImage>> uploadGallery(
+            @PathVariable Long id,
+            @RequestParam("files") MultipartFile[] files) {
+
+        List<EventImage> uploadedImages = eventService.uploadGalleryImages(id, files);
+
+        return ResponseEntity.ok(uploadedImages);
     }
 }
