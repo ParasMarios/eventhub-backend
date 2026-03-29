@@ -1,6 +1,7 @@
 package com.paraske.EventHub.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
@@ -19,11 +20,25 @@ public class EventImage {
     @JsonIgnore
     private Event event;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "uploader_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "password", "email", "roles", "createdEvents", "joinedEvents"})
+    private User uploader;
+
     public EventImage() {}
 
-    public EventImage(String imageUrl, Event event) {
+    public EventImage(String imageUrl, Event event, User uploader) {
         this.imageUrl = imageUrl;
         this.event = event;
+        this.uploader = uploader;
+    }
+
+    public User getUploader() {
+        return uploader;
+    }
+
+    public void setUploader(User uploader) {
+        this.uploader = uploader;
     }
 
     public Long getId() { return id; }

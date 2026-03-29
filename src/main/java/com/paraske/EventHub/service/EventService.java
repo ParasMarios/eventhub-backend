@@ -136,7 +136,7 @@ public class EventService {
         eventRepository.deleteById(eventId);
     }
 
-    public List<EventImage> uploadGalleryImages(Long eventId, MultipartFile[] files) {
+    public List<EventImage> uploadGalleryImages(Long eventId, MultipartFile[] files, User currentUser) {
         // 1. Βρίσκουμε το Event
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Το Event δεν βρέθηκε!"));
@@ -160,7 +160,7 @@ public class EventService {
                     Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
                     // 3. Δημιουργία και αποθήκευση της οντότητας στη Βάση
-                    EventImage image = new EventImage(filename, event);
+                    EventImage image = new EventImage(filename, event, currentUser);
                     savedImages.add(eventImageRepository.save(image));
                 }
             }
@@ -169,6 +169,31 @@ public class EventService {
         }
 
         return savedImages;
+    }
+
+    @Transactional
+    public void deleteGalleryImage(Long imageId, User currentUser) {
+        EventImage image = eventImageRepository.findById(imageId)
+                .orElseThrow(() -> new RuntimeException("Η φωτογραφία δεν βρέθηκε."));
+
+        boolean isUploader = image.getUploader().getId().equals(currentUser.getId());
+        boolean isOrganizer = image.getEvent().getOrganizer().getId().equals(currentUser.getId());
+
+        if (!isUploader && !isOrganizer) {
+            throw new RuntimeException("Δεν έχετε δικαίωμα να διαγράψετε αυτή τη φωτογραφία.");
+        }
+
+        String uploadDir = "uploads/";
+        Path filePath = Paths.get(uploadDir, image.getImageUrl());
+
+        try {
+            Files.deleteIfExists(filePath);
+            System.out.println("Το αρχείο διαγράφηκε από τον δίσκο: " + filePath);
+        } catch (IOException e) {
+            System.err.println("Αποτυχία διαγραφής αρχείου: " + e.getMessage());
+        }
+
+        eventImageRepository.delete(image);
     }
 
 }

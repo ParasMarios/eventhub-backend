@@ -160,11 +160,25 @@ public class EventController {
     @PostMapping(value = "/{id}/gallery", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<List<EventImage>> uploadGallery(
             @PathVariable Long id,
-            @RequestParam("files") MultipartFile[] files) {
+            @RequestParam("files") MultipartFile[] files,
+            Principal principal) {
+        User currentUser = userRepository.findByUsername(principal.getName()).orElseThrow();
 
-        List<EventImage> uploadedImages = eventService.uploadGalleryImages(id, files);
+        List<EventImage> uploadedImages = eventService.uploadGalleryImages(id, files, currentUser);
 
         return ResponseEntity.ok(uploadedImages);
+    }
+
+    @DeleteMapping("/images/{imageId}")
+    public ResponseEntity<?> deleteImage(@PathVariable Long imageId, Principal principal) {
+        User currentUser = userRepository.findByUsername(principal.getName()).orElseThrow();
+
+        try {
+            eventService.deleteGalleryImage(imageId, currentUser);
+            return ResponseEntity.ok().body("{\"message\": \"Η φωτογραφία διαγράφηκε επιτυχώς.\"}");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(403).body("{\"error\": \"" + e.getMessage() + "\"}");
+        }
     }
 
     @PostMapping("/{id}/leave")
