@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.paraske.EventHub.dto.EventRatingStats;
 import com.paraske.EventHub.model.Event;
+import com.paraske.EventHub.repository.EventRepository;
 import com.paraske.EventHub.service.EventService;
 import com.paraske.EventHub.service.MediaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Set;
 
@@ -31,9 +34,31 @@ public class EventController {
     @Autowired
     private MediaService mediaService;
 
+    @Autowired
+    private EventRepository eventRepository;
+
     @GetMapping
-    public List<Event> getAllEvents() {
-        return eventService.getAllEvents();
+    public ResponseEntity<List<Event>> getAllEvents(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+
+        String titleFilter = (title != null && !title.trim().isEmpty()) ? "%" + title.toLowerCase() + "%" : null;
+        String locationFilter = (location != null && !location.trim().isEmpty()) ? "%" + location.toLowerCase() + "%" : null;
+
+        LocalDateTime startDate;
+        LocalDateTime endDate;
+
+        if (date != null) {
+            startDate = date.atStartOfDay();
+            endDate = date.atTime(LocalTime.MAX);
+        } else {
+            startDate = LocalDateTime.of(1900, 1, 1, 0, 0);
+            endDate = LocalDateTime.of(2100, 12, 31, 23, 59);
+        }
+
+        List<Event> events = eventRepository.searchEvents(titleFilter, locationFilter, startDate, endDate);
+        return ResponseEntity.ok(events);
     }
 
     @PostMapping(consumes = { "multipart/form-data" })
