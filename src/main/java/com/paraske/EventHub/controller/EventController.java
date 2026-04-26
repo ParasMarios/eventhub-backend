@@ -53,12 +53,16 @@ public class EventController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(required = false) Long categoryId) {
 
-        LocalDateTime startDate = null;
-        LocalDateTime endDate = null;
+        LocalDateTime startDate;
+        LocalDateTime endDate;
 
         if (date != null) {
             startDate = date.atStartOfDay();
             endDate = date.atTime(LocalTime.MAX);
+        } else {
+            // --- ΑΥΤΟ ΕΛΕΙΠΕ! Αν δεν μπει φίλτρο, ψάξε από το 1900 έως το 2100 ---
+            startDate = LocalDateTime.of(1900, 1, 1, 0, 0);
+            endDate = LocalDateTime.of(2100, 12, 31, 23, 59);
         }
 
         List<Event> events = eventService.filterEvents(title, location, startDate, endDate, categoryId);
