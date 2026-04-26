@@ -27,6 +27,9 @@ public class Event {
 
     private LocalDateTime dateTime;
 
+    @Column(name = "end_date_time")
+    private LocalDateTime endDateTime;
+
     private String imageUrl;
 
     // Σύνδεση με τον χρήστη που το δημιούργησε (Organizer)
@@ -116,5 +119,13 @@ public class Event {
 
     public void setParticipants(Set<User> participants) {
         this.participants = participants;
+    }
+
+    public LocalDateTime getEndDateTime() {
+        return endDateTime;
+    }
+
+    public void setEndDateTime(LocalDateTime endDateTime) {
+        this.endDateTime = endDateTime;
     }
 }
