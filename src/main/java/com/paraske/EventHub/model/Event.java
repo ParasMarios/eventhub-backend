@@ -32,6 +32,10 @@ public class Event {
 
     private String imageUrl;
 
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
+
     // Σύνδεση με τον χρήστη που το δημιούργησε (Organizer)
     @ManyToOne
     @JoinColumn(name = "organizer_id", nullable = false)
@@ -127,5 +131,13 @@ public class Event {
 
     public void setEndDateTime(LocalDateTime endDateTime) {
         this.endDateTime = endDateTime;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
     }
 }
