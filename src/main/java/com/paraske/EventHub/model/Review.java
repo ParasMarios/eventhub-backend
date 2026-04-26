@@ -2,6 +2,8 @@ package com.paraske.EventHub.model;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "reviews")
 public class Review {
@@ -21,6 +23,14 @@ public class Review {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User author;
+
+    @Column(name = "created_at", updatable = false)
+    private LocalDate createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDate.now();
+    }
 
     public Long getId() {
         return id;
@@ -60,5 +70,13 @@ public class Review {
 
     public void setAuthor(User author) {
         this.author = author;
+    }
+
+    public LocalDate getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDate createdAt) {
+        this.createdAt = createdAt;
     }
 }
