@@ -71,6 +71,7 @@ public class EventService {
         event.setDescription(details.getDescription());
         event.setLocation(details.getLocation());
         event.setDateTime(details.getDateTime());
+        event.setEndDateTime(details.getEndDateTime());
 
         return eventRepository.save(event);
     }
