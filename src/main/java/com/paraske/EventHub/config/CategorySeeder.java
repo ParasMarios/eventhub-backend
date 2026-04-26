@@ -14,7 +14,6 @@ public class CategorySeeder implements CommandLineRunner {
     private CategoryRepository categoryRepository;
 
     @Override
-    @Transactional
     public void run(String... args) throws Exception {
         // Αν υπάρχουν ήδη κατηγορίες, μην κάνεις τίποτα
         if (categoryRepository.count() > 0) {
