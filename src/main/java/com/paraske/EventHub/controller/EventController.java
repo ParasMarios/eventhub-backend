@@ -50,23 +50,18 @@ public class EventController {
     public ResponseEntity<List<Event>> getAllEvents(
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String location,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) Long categoryId) {
 
-        String titleFilter = (title != null && !title.trim().isEmpty()) ? "%" + title.toLowerCase() + "%" : null;
-        String locationFilter = (location != null && !location.trim().isEmpty()) ? "%" + location.toLowerCase() + "%" : null;
-
-        LocalDateTime startDate;
-        LocalDateTime endDate;
+        LocalDateTime startDate = null;
+        LocalDateTime endDate = null;
 
         if (date != null) {
             startDate = date.atStartOfDay();
             endDate = date.atTime(LocalTime.MAX);
-        } else {
-            startDate = LocalDateTime.of(1900, 1, 1, 0, 0);
-            endDate = LocalDateTime.of(2100, 12, 31, 23, 59);
         }
 
-        List<Event> events = eventRepository.searchEvents(titleFilter, locationFilter, startDate, endDate);
+        List<Event> events = eventService.filterEvents(title, location, startDate, endDate, categoryId);
         return ResponseEntity.ok(events);
     }
 
@@ -135,9 +130,10 @@ public class EventController {
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String location,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end,
+            @RequestParam(required = false) Long categoryId) {
 
-        return eventService.filterEvents(title, location, start, end);
+        return eventService.filterEvents(title, location, start, end, categoryId);
     }
 
     @DeleteMapping("/{eventId}")

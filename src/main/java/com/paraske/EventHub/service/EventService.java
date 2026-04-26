@@ -3,25 +3,15 @@ package com.paraske.EventHub.service;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.paraske.EventHub.dto.EventRatingStats;
-import com.paraske.EventHub.model.Event;
-import com.paraske.EventHub.model.EventImage;
-import com.paraske.EventHub.model.Review;
-import com.paraske.EventHub.model.User;
-import com.paraske.EventHub.repository.EventImageRepository;
-import com.paraske.EventHub.repository.ReviewRepository;
+import com.paraske.EventHub.model.*;
+import com.paraske.EventHub.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.paraske.EventHub.repository.EventRepository;
-import com.paraske.EventHub.repository.UserRepository;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -43,6 +33,9 @@ public class EventService {
     @Autowired
     private Cloudinary cloudinary;
 
+    @Autowired
+    private CategoryRepository categoryRepository;
+
 
     public List<Event> getAllEvents() {
         return eventRepository.findAll();
@@ -53,8 +46,14 @@ public class EventService {
 
         User organizer = userRepository.findById(organizerId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + organizerId));
-
         event.setOrganizer(organizer);
+
+        // Σύνδεση της Κατηγορίας
+        if (event.getCategory() != null && event.getCategory().getId() != null) {
+            Category category = categoryRepository.findById(event.getCategory().getId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+            event.setCategory(category);
+        }
 
         return eventRepository.save(event);
     }
@@ -62,7 +61,6 @@ public class EventService {
     public Event updateEvent(Long id, Event details, String username) {
         Event event = eventRepository.findById(id).orElseThrow();
 
-        // Έλεγχος αν είναι ο ιδιοκτήτης
         if (!event.getOrganizer().getUsername().equals(username)) {
             throw new AccessDeniedException("Not authorized");
         }
@@ -72,6 +70,13 @@ public class EventService {
         event.setLocation(details.getLocation());
         event.setDateTime(details.getDateTime());
         event.setEndDateTime(details.getEndDateTime());
+
+        // Ενημέρωση της Κατηγορίας
+        if (details.getCategory() != null && details.getCategory().getId() != null) {
+            Category category = categoryRepository.findById(details.getCategory().getId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+            event.setCategory(category);
+        }
 
         return eventRepository.save(event);
     }
@@ -102,7 +107,7 @@ public class EventService {
         return new EventRatingStats(overall, (long) reviews.size());
     }
 
-    public List<Event> filterEvents(String title, String location, LocalDateTime start, LocalDateTime end) {
+    public List<Event> filterEvents(String title, String location, LocalDateTime start, LocalDateTime end, Long categoryId) {
 
         if (start == null) start = LocalDateTime.now();
         if (end == null) end = LocalDateTime.now().plusYears(75);
@@ -110,9 +115,26 @@ public class EventService {
         String searchTitle = (title == null) ? "" : title;
         String searchLocation = (location == null) ? "" : location;
 
-        return eventRepository.findByTitleContainingIgnoreCaseAndLocationContainingIgnoreCaseAndDateTimeBetween(
+        // Παίρνουμε αρχικά όλα τα events που ταιριάζουν σε τίτλο/τοποθεσία/ημερομηνία
+        List<Event> events = eventRepository.findByTitleContainingIgnoreCaseAndLocationContainingIgnoreCaseAndDateTimeBetween(
                 searchTitle, searchLocation, start, end
         );
+
+        if (categoryId != null) {
+            events = events.stream().filter(event -> {
+                if (event.getCategory() == null) return false;
+
+                Long catId = event.getCategory().getId();
+                Long parentId = (event.getCategory().getParent() != null) ? event.getCategory().getParent().getId() : null;
+
+                // Κρατάμε το event ΑΝ ανήκει στην κατηγορία ΠΟΥ ΖΗΤΗΘΗΚΕ
+                // Ή ΑΝ η κατηγορία του έχει ΓΟΝΙΟ την κατηγορία που ζητήθηκε!
+                return catId.equals(categoryId) || (parentId != null && parentId.equals(categoryId));
+
+            }).toList();
+        }
+
+        return events;
     }
 
     public boolean isOrganizer(Long eventId, Long userId) {
