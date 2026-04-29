@@ -30,6 +30,13 @@ public class Event {
     @Column(name = "end_date_time")
     private LocalDateTime endDateTime;
 
+
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
+
     private String imageUrl;
 
     @ManyToOne
@@ -139,5 +146,21 @@ public class Event {
 
     public void setCategory(Category category) {
         this.category = category;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 }
