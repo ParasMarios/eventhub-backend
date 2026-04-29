@@ -6,9 +6,11 @@ import com.paraske.EventHub.repository.EventRepository;
 import com.paraske.EventHub.repository.ReviewRepository;
 import com.paraske.EventHub.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,5 +65,25 @@ public class UserController {
         response.put("events", events);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateProfile(@PathVariable Long id, @RequestBody User updatedData, Principal principal) {
+        User currentUser = userRepository.findByUsername(principal.getName())
+                .orElseThrow(() -> new RuntimeException("Ο χρήστης δεν βρέθηκε"));
+
+        // 2. Έλεγχος Ασφαλείας: Είναι ο ίδιος χρήστης;
+        if (!currentUser.getId().equals(id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Δεν έχετε δικαίωμα επεξεργασίας αυτού του προφίλ.");
+        }
+
+        currentUser.setDescription(updatedData.getDescription());
+        currentUser.setAddress(updatedData.getAddress());
+        currentUser.setPhone(updatedData.getPhone());
+        currentUser.setPublicEmail(updatedData.getPublicEmail());
+
+        userRepository.save(currentUser);
+
+        return ResponseEntity.ok("Το προφίλ ενημερώθηκε επιτυχώς!");
     }
 }
