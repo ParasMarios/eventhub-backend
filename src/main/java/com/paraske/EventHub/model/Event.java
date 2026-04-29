@@ -39,6 +39,15 @@ public class Event {
 
     private String imageUrl;
 
+    @Column(columnDefinition = "TEXT")
+    private String bookingDescription;
+
+    private String bookingUrl;
+
+    // To cascade = CascadeType.ALL σημαίνει πως αν διαγραφεί το event, διαγράφονται και τα εισιτήριά του
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<Ticket> tickets = new java.util.ArrayList<>();
+
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
@@ -162,5 +171,29 @@ public class Event {
 
     public void setLongitude(Double longitude) {
         this.longitude = longitude;
+    }
+
+    public String getBookingDescription() {
+        return bookingDescription;
+    }
+
+    public void setBookingDescription(String bookingDescription) {
+        this.bookingDescription = bookingDescription;
+    }
+
+    public String getBookingUrl() {
+        return bookingUrl;
+    }
+
+    public void setBookingUrl(String bookingUrl) {
+        this.bookingUrl = bookingUrl;
+    }
+
+    public List<Ticket> getTickets() {
+        return tickets;
+    }
+
+    public void setTickets(List<Ticket> tickets) {
+        this.tickets = tickets;
     }
 }

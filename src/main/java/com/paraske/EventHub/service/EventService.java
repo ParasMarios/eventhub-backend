@@ -59,6 +59,10 @@ public class EventService {
             event.setCategory(category);
         }
 
+        if (event.getTickets() != null) {
+            event.getTickets().forEach(ticket -> ticket.setEvent(event));
+        }
+
         return eventRepository.save(event);
     }
 
@@ -74,6 +78,16 @@ public class EventService {
         event.setLocation(details.getLocation());
         event.setDateTime(details.getDateTime());
         event.setEndDateTime(details.getEndDateTime());
+        event.setBookingDescription(details.getBookingDescription());
+        event.setBookingUrl(details.getBookingUrl());
+
+        if (details.getTickets() != null) {
+            event.getTickets().clear();
+            details.getTickets().forEach(ticket -> {
+                ticket.setEvent(event);
+                event.getTickets().add(ticket);
+            });
+        }
 
         // Ενημέρωση της Κατηγορίας
         if (details.getCategory() != null && details.getCategory().getId() != null) {
