@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -134,17 +135,18 @@ public class EventService {
                 double targetLat = coords[0];
                 double targetLng = coords[1];
 
-                List<Event> radiusEvents = filterByRadius(events, targetLat, targetLng, 15.0);
+                List<Event> radiusEvents = filterByRadiusOrText(events, targetLat, targetLng, 15.0, location);
 
                 if (radiusEvents.size() < 5) {
-                    System.out.println("Βρέθηκαν λίγα events, επέκταση ακτίνας στα 50χλμ...");
-                    events = filterByRadius(events, targetLat, targetLng, 50.0);
+                    System.out.println("Επέκταση ακτίνας στα 50χλμ...");
+                    events = filterByRadiusOrText(events, targetLat, targetLng, 50.0, location);
                 } else {
                     events = radiusEvents;
                 }
             } else {
+                String searchLocNormalized = stripAccents(location.toLowerCase());
                 events = events.stream()
-                        .filter(e -> e.getLocation() != null && e.getLocation().toLowerCase().contains(location.toLowerCase()))
+                        .filter(e -> e.getLocation() != null && stripAccents(e.getLocation().toLowerCase()).contains(searchLocNormalized))
                         .toList();
             }
         }
@@ -152,16 +154,23 @@ public class EventService {
         return events;
     }
 
-    private List<Event> filterByRadius(List<Event> sourceEvents, double targetLat, double targetLng, double radiusKm) {
+    private List<Event> filterByRadiusOrText(List<Event> sourceEvents, double targetLat, double targetLng, double radiusKm, String searchText) {
+        String searchNormalized = stripAccents(searchText.toLowerCase());
+
         return sourceEvents.stream().filter(e -> {
-            if (e.getLatitude() == null || e.getLongitude() == null) return false;
-            double distance = calculateHaversineDistance(targetLat, targetLng, e.getLatitude(), e.getLongitude());
-            return distance <= radiusKm;
+            if (e.getLatitude() != null && e.getLongitude() != null) {
+                double distance = calculateHaversineDistance(targetLat, targetLng, e.getLatitude(), e.getLongitude());
+                if (distance <= radiusKm) {
+                    return true;
+                }
+            }
+
+            return e.getLocation() != null && stripAccents(e.getLocation().toLowerCase()).contains(searchNormalized);
         }).toList();
     }
 
     private double calculateHaversineDistance(double lat1, double lon1, double lat2, double lon2) {
-        final int R = 6371;
+        final int R = 6371; // Ακτίνα της Γης σε χιλιόμετρα
 
         double latDistance = Math.toRadians(lat2 - lat1);
         double lonDistance = Math.toRadians(lon2 - lon1);
@@ -171,6 +180,11 @@ public class EventService {
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
         return R * c;
+    }
+
+    private String stripAccents(String input) {
+        return input == null ? null : Normalizer.normalize(input, Normalizer.Form.NFD)
+                                      .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
     }
 
     public boolean isOrganizer(Long eventId, Long userId) {

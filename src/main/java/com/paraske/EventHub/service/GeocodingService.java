@@ -9,18 +9,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 @Service
 public class GeocodingService {
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // Μετατρέπει π.χ. το "Τρίπολη" σε [37.508, 22.373]
     public double[] getCoordinates(String locationName) {
         try {
-            String url = "https://nominatim.openstreetmap.org/search?q=" + locationName + "&format=json&limit=1";
+            // ΠΟΛΥ ΣΗΜΑΝΤΙΚΟ: Κωδικοποίηση των Ελληνικών χαρακτήρων (URL Encoding)
+            String encodedLocation = URLEncoder.encode(locationName, StandardCharsets.UTF_8.toString());
+            String url = "https://nominatim.openstreetmap.org/search?q=" + encodedLocation + "&format=json&limit=1";
 
-            // Το OpenStreetMap απαιτεί ένα User-Agent header για να μην μας μπλοκάρει
             HttpHeaders headers = new HttpHeaders();
             headers.set("User-Agent", "EventHubApp/1.0");
             HttpEntity<String> entity = new HttpEntity<>(headers);
@@ -35,7 +38,7 @@ public class GeocodingService {
                 return new double[]{lat, lon};
             }
         } catch (Exception e) {
-            System.err.println("Αποτυχία γεωεντοπισμού για: " + locationName);
+            System.err.println("Αποτυχία γεωεντοπισμού για: " + locationName + " - Λόγος: " + e.getMessage());
         }
         return null;
     }
