@@ -23,6 +23,15 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    private String address;
+
+    private String phone;
+
+    private String publicEmail;
+
     // Τα events που οργάνωσε ο χρήστης
     @OneToMany(mappedBy = "organizer")
     @JsonIgnore
@@ -78,5 +87,37 @@ public class User {
 
     public void setOrganizedEvents(List<Event> organizedEvents) {
         this.organizedEvents = organizedEvents;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getPublicEmail() {
+        return publicEmail;
+    }
+
+    public void setPublicEmail(String publicEmail) {
+        this.publicEmail = publicEmail;
     }
 }
