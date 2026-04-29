@@ -36,6 +36,9 @@ public class EventService {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    @Autowired
+    private GeocodingService geocodingService;
+
 
     public List<Event> getAllEvents() {
         return eventRepository.findAll();
@@ -111,30 +114,63 @@ public class EventService {
 
         if (start == null) start = LocalDateTime.now();
         if (end == null) end = LocalDateTime.now().plusYears(75);
-
         String searchTitle = (title == null) ? "" : title;
-        String searchLocation = (location == null) ? "" : location;
 
-        // Παίρνουμε αρχικά όλα τα events που ταιριάζουν σε τίτλο/τοποθεσία/ημερομηνία
-        List<Event> events = eventRepository.findByTitleContainingIgnoreCaseAndLocationContainingIgnoreCaseAndDateTimeBetween(
-                searchTitle, searchLocation, start, end
-        );
+        List<Event> events = eventRepository.findByTitleContainingIgnoreCaseAndDateTimeBetween(searchTitle, start, end);
 
         if (categoryId != null) {
             events = events.stream().filter(event -> {
                 if (event.getCategory() == null) return false;
-
                 Long catId = event.getCategory().getId();
                 Long parentId = (event.getCategory().getParent() != null) ? event.getCategory().getParent().getId() : null;
-
-                // Κρατάμε το event ΑΝ ανήκει στην κατηγορία ΠΟΥ ΖΗΤΗΘΗΚΕ
-                // Ή ΑΝ η κατηγορία του έχει ΓΟΝΙΟ την κατηγορία που ζητήθηκε!
                 return catId.equals(categoryId) || (parentId != null && parentId.equals(categoryId));
-
             }).toList();
         }
 
+        if (location != null && !location.trim().isEmpty()) {
+            double[] coords = geocodingService.getCoordinates(location);
+
+            if (coords != null) {
+                double targetLat = coords[0];
+                double targetLng = coords[1];
+
+                List<Event> radiusEvents = filterByRadius(events, targetLat, targetLng, 15.0);
+
+                if (radiusEvents.size() < 5) {
+                    System.out.println("Βρέθηκαν λίγα events, επέκταση ακτίνας στα 50χλμ...");
+                    events = filterByRadius(events, targetLat, targetLng, 50.0);
+                } else {
+                    events = radiusEvents;
+                }
+            } else {
+                events = events.stream()
+                        .filter(e -> e.getLocation() != null && e.getLocation().toLowerCase().contains(location.toLowerCase()))
+                        .toList();
+            }
+        }
+
         return events;
+    }
+
+    private List<Event> filterByRadius(List<Event> sourceEvents, double targetLat, double targetLng, double radiusKm) {
+        return sourceEvents.stream().filter(e -> {
+            if (e.getLatitude() == null || e.getLongitude() == null) return false;
+            double distance = calculateHaversineDistance(targetLat, targetLng, e.getLatitude(), e.getLongitude());
+            return distance <= radiusKm;
+        }).toList();
+    }
+
+    private double calculateHaversineDistance(double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371;
+
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c;
     }
 
     public boolean isOrganizer(Long eventId, Long userId) {

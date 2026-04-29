@@ -18,12 +18,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     // Εύρεση events που οργάνωσε συγκεκριμένος χρήστης
     List<Event> findByOrganizerId(Long userId);
 
-    List<Event> findByTitleContainingIgnoreCaseAndLocationContainingIgnoreCaseAndDateTimeBetween(
-            String title,
-            String location,
-            LocalDateTime start,
-            LocalDateTime end
-    );
+    // Κρατάμε μόνο Τίτλο και Ημερομηνία. Το Location θα το φιλτράρουμε έξυπνα στη Java!
+    List<Event> findByTitleContainingIgnoreCaseAndDateTimeBetween(String title, LocalDateTime start, LocalDateTime end);
 
     @Query("SELECT e FROM Event e WHERE " +
             "(:title IS NULL OR LOWER(e.title) LIKE :title) AND " +
