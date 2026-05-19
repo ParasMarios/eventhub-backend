@@ -5,6 +5,8 @@ import com.cloudinary.utils.ObjectUtils;
 import com.paraske.EventHub.dto.EventRatingStats;
 import com.paraske.EventHub.model.*;
 import com.paraske.EventHub.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ import java.util.*;
 
 @Service
 public class EventService {
+    private static final Logger logger = LoggerFactory.getLogger(EventService.class);
 
     @Autowired
     private EventRepository eventRepository;
@@ -152,7 +155,7 @@ public class EventService {
                 List<Event> radiusEvents = filterByRadiusOrText(events, targetLat, targetLng, 15.0, location);
 
                 if (radiusEvents.size() < 5) {
-                    System.out.println("Επέκταση ακτίνας στα 50χλμ...");
+                    logger.debug("Expanding radius to 50km...");
                     events = filterByRadiusOrText(events, targetLat, targetLng, 50.0, location);
                 } else {
                     events = radiusEvents;
@@ -245,7 +248,7 @@ public class EventService {
                 uploadedImages.add(eventImageRepository.save(image));
 
             } catch (IOException e) {
-                System.err.println("Αποτυχία ανεβάσματος στο Cloudinary: " + e.getMessage());
+                logger.error("Failed to upload image to Cloudinary", e);
                 throw new RuntimeException("Αποτυχία αποθήκευσης της εικόνας.");
             }
         }

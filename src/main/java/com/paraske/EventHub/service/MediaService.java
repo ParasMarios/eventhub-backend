@@ -2,6 +2,8 @@ package com.paraske.EventHub.service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -11,6 +13,7 @@ import java.util.Map;
 
 @Service
 public class MediaService {
+    private static final Logger logger = LoggerFactory.getLogger(MediaService.class);
 
     @Autowired
     private Cloudinary cloudinary;
@@ -22,7 +25,7 @@ public class MediaService {
             return uploadResult.get("secure_url").toString();
 
         } catch (IOException e) {
-            System.err.println("Αποτυχία ανεβάσματος κεντρικής εικόνας στο Cloudinary: " + e.getMessage());
+            logger.error("Failed to upload main image to Cloudinary", e);
             throw new IOException("Αποτυχία αποθήκευσης της εικόνας στο Cloud.", e);
         }
     }

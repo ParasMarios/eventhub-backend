@@ -2,13 +2,15 @@ package com.paraske.EventHub.config;
 
 import com.paraske.EventHub.model.Category;
 import com.paraske.EventHub.repository.CategoryRepository;
-import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CategorySeeder implements CommandLineRunner {
+    private static final Logger logger = LoggerFactory.getLogger(CategorySeeder.class);
 
     @Autowired
     private CategoryRepository categoryRepository;
@@ -20,7 +22,7 @@ public class CategorySeeder implements CommandLineRunner {
             return;
         }
 
-        System.out.println("Εισαγωγή Ταξονομίας Κατηγοριών στη βάση...");
+        logger.info("Importing category taxonomy into the database...");
 
         // 1. Cultural and Entertainment Events
         Category cultural = createCategory("Cultural and Entertainment Events", null);
@@ -47,7 +49,7 @@ public class CategorySeeder implements CommandLineRunner {
         createCategory("Community Events", publicCivic);
         createCategory("Religious Events", publicCivic);
 
-        System.out.println("Η Ταξονομία ολοκληρώθηκε επιτυχώς!");
+        logger.info("Category taxonomy imported successfully!");
     }
 
     private Category createCategory(String name, Category parent) {

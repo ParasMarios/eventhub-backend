@@ -2,6 +2,8 @@ package com.paraske.EventHub.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -14,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 
 @Service
 public class GeocodingService {
+    private static final Logger logger = LoggerFactory.getLogger(GeocodingService.class);
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -21,7 +24,7 @@ public class GeocodingService {
     public double[] getCoordinates(String locationName) {
         try {
             // ΠΟΛΥ ΣΗΜΑΝΤΙΚΟ: Κωδικοποίηση των Ελληνικών χαρακτήρων (URL Encoding)
-            String encodedLocation = URLEncoder.encode(locationName, StandardCharsets.UTF_8.toString());
+            String encodedLocation = URLEncoder.encode(locationName, StandardCharsets.UTF_8);
             String url = "https://nominatim.openstreetmap.org/search?q=" + encodedLocation + "&format=json&limit=1";
 
             HttpHeaders headers = new HttpHeaders();
@@ -31,14 +34,14 @@ public class GeocodingService {
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
 
             JsonNode root = objectMapper.readTree(response.getBody());
-            if (root.isArray() && root.size() > 0) {
+            if (!root.isEmpty() && root.isArray()) {
                 JsonNode firstResult = root.get(0);
                 double lat = firstResult.get("lat").asDouble();
                 double lon = firstResult.get("lon").asDouble();
                 return new double[]{lat, lon};
             }
         } catch (Exception e) {
-            System.err.println("Αποτυχία γεωεντοπισμού για: " + locationName + " - Λόγος: " + e.getMessage());
+            logger.error("Geocoding failed for: {} - Reason: {}", locationName, e.getMessage());
         }
         return null;
     }
